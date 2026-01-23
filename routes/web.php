@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\TiketController;
+use App\Http\Controllers\Admin\TicketTypeController;
 use App\Http\Controllers\Admin\HistoriesController;
 
 use App\Models\Kategori;
@@ -40,6 +41,9 @@ Route::middleware('auth')->group(function () {
 
         // Tiket Management 
         Route::resource('tickets', TiketController::class);
+        
+        // Ticket Type
+        Route::resource('ticket-types', TicketTypeController::class);
 
         // Histories
         Route::get('/histories', [HistoriesController::class, 'index'])->name('histories.index');

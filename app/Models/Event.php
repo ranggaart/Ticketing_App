@@ -28,6 +28,11 @@ class Event extends Model
         return $this->hasMany(Tiket::class);
     }
 
+    public function ticketTypes()
+    {
+        return $this->hasMany(TicketType::class);
+    }
+
     public function kategori()
     {
         return $this->belongsTo(Kategori::class);

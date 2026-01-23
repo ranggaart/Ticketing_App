@@ -40,6 +40,26 @@
                 </a>
             </li>
 
+            <!-- Ticket Type item -->
+            <li class="{{ request()->routeIs('admin.ticket-types.*') ? 'bg-gray-200 rounded-lg' : '' }}">
+                <a href="{{ route('admin.ticket-types.index') }}"
+                    class="is-drawer-close:tooltip is-drawer-close:tooltip-right"
+                    data-tip="Tipe Tiket">
+
+                    <!-- icon Ticket Type -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 7h16a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V9a2 2 0 0 1 2-2" />
+                    </svg>
+
+                    <span class="is-drawer-close:hidden">
+                        Manajemen Tipe Tiket
+                    </span>
+                </a>
+            </li>
+
+
+
             <!-- History item -->
             <li class="{{ request()->routeIs('admin.histories.*') ? 'bg-gray-200 rounded-lg' : '' }}">
                 <a href="{{ route('admin.histories.index') }}" class="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="History">
