@@ -4,26 +4,26 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\EventController;
+use App\Http\Controllers\Admin\EventController as AdminEventController;
+use App\Http\Controllers\User\EventController as UserEventController;
 use App\Http\Controllers\Admin\TiketController;
 use App\Http\Controllers\Admin\TicketTypeController;
 use App\Http\Controllers\Admin\HistoriesController;
-
+use App\Http\Controllers\User\HomeController;
+use App\Http\Controllers\User\OrderController;
 use App\Models\Kategori;
 use App\Models\Event;
 
 
+Route::get('/', action: [HomeController::class, 'index'])->name('home');
 
-Route::get('/', function () {
-    return view('home', [
-        'categories' => Kategori::all(),
-        'events' => Event::all()
-    ]);
-})->name('home');
+// User Event
+Route::get('/events/{event}', [UserEventController::class, 'show'])->name('events.show');
 
-// Route::get('/dashboard', function () {
-//     return view('dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
+// User Orders
+Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -37,7 +37,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('categories', CategoryController::class);
 
         // Event Management
-        Route::resource('events', EventController::class);
+        Route::resource('events', AdminEventController::class);
 
         // Tiket Management 
         Route::resource('tickets', TiketController::class);

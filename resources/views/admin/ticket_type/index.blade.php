@@ -2,17 +2,17 @@
 
     {{-- Toast Success --}}
     @if (session('success'))
-        <div class="toast toast-bottom toast-center">
-            <div class="alert alert-success">
-                <span>{{ session('success') }}</span>
-            </div>
+    <div class="toast toast-bottom toast-center">
+        <div class="alert alert-success">
+            <span>{{ session('success') }}</span>
         </div>
+    </div>
 
-        <script>
-            setTimeout(() => {
-                document.querySelector('.toast')?.remove()
-            }, 3000)
-        </script>
+    <script>
+        setTimeout(() => {
+            document.querySelector('.toast')?.remove()
+        }, 3000)
+    </script>
     @endif
 
     <div class="container mx-auto p-10">
@@ -24,7 +24,7 @@
             </h1>
 
             <a href="{{ route('admin.ticket-types.create') }}"
-               class="btn btn-primary ml-auto">
+                class="btn btn-primary ml-auto">
                 Tambah Tipe Tiket
             </a>
         </div>
@@ -45,43 +45,48 @@
 
                 <tbody>
                     @forelse ($ticketTypes as $index => $type)
-                        <tr>
-                            <th>{{ $index + 1 }}</th>
+                    <tr>
+                        <th>{{ $index + 1 }}</th>
 
-                            <td>{{ $type->name }}</td>
+                        <td>{{ $type->name }}</td>
 
-                            <td>
-                                {{ $type->event->judul ?? '-' }}
-                            </td>
+                        <td>
+                            {{ $type->event->judul ?? '-' }}
+                        </td>
 
-                            <td>
-                                Rp {{ number_format($type->price, 0, ',', '.') }}
-                            </td>
+                        <td>
+                            Rp {{ number_format($type->price, 0, ',', '.') }}
+                        </td>
 
-                            <td>
-                                {{ $type->quota }}
-                            </td>
+                        <td>
+                            {{ $type->quota }}
+                        </td>
 
-                            <td>
-                                <a href="{{ route('admin.ticket-types.edit', $type->id) }}"
-                                   class="btn btn-sm btn-primary mr-2">
-                                    Edit
-                                </a>
+                        <td>
+                            <a href="{{ route('admin.ticket-types.show', $type->id) }}"
+                                class="btn btn-sm btn-info mr-2">
+                                Detail
+                            </a>
 
-                                <button
-                                    class="btn btn-sm bg-red-500 text-white"
-                                    onclick="openDeleteModal(this)"
-                                    data-id="{{ $type->id }}">
-                                    Hapus
-                                </button>
-                            </td>
-                        </tr>
+                            <a href="{{ route('admin.ticket-types.edit', $type->id) }}"
+                                class="btn btn-sm btn-primary mr-2">
+                                Edit
+                            </a>
+
+                            <button
+                                class="btn btn-sm bg-red-500 text-white"
+                                onclick="openDeleteModal(this)"
+                                data-id="{{ $type->id }}">
+                                Hapus
+                            </button>
+                        </td>
+                    </tr>
                     @empty
-                        <tr>
-                            <td colspan="6" class="text-center">
-                                Tidak ada tipe tiket tersedia.
-                            </td>
-                        </tr>
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            Tidak ada tipe tiket tersedia.
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>
