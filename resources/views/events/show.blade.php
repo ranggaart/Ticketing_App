@@ -257,7 +257,7 @@
     // init
     updateSummary();
     }) ();
-
+    
     document.getElementById('confirmCheckout').addEventListener('click', async () => {
       const btn = document.getElementById('confirmCheckout');
       btn.setAttribute('disabled', 'disabled');
@@ -303,5 +303,6 @@
         btn.textContent = 'Konfirmasi (placeholder)';
       }
     });
+    
   </script>
 </x-layouts.app>
