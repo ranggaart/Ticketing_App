@@ -14,20 +14,44 @@ use App\Http\Controllers\User\OrderController;
 use App\Models\Kategori;
 use App\Models\Event;
 
-
+/**
+ * Halaman utama (homepage)
+ * Diakses oleh semua user (tanpa login)
+ * Controller: HomeController@index
+ */
 Route::get('/', action: [HomeController::class, 'index'])->name('home');
 
-// User Event
+/**
+ * Halaman detail event untuk user
+ * {event} akan otomatis di-bind ke model Event (Route Model Binding)
+ * Controller: User\EventController@show
+ */
 Route::get('/events/{event}', [UserEventController::class, 'show'])->name('events.show');
 
-// User Orders
+/**
+ * Menampilkan daftar order milik user
+ */
 Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+
+/**
+ * Menampilkan detail order berdasarkan ID
+ */
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
+/**
+ * Menyimpan order baru (checkout)
+ */
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 
 Route::middleware('auth')->group(function () {
+    
+    // Halaman edit profile user
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    
+    // Update data profile user
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    
+    // Hapus akun user
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {

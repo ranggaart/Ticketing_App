@@ -10,65 +10,91 @@ use Illuminate\Http\Request;
 class TicketTypeController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar semua tipe tiket.
      */
     public function index()
     {
+        // Mengambil semua data tipe tiket dari database
         $ticketTypes = TicketType::all();
-        return view('admin.ticket_type.index', compact('ticketTypes'));
+
+        // Mengirim data ke view admin.ticket_type.index
+        return view(
+            'admin.ticket_type.index', 
+            compact('ticketTypes'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form untuk menambahkan tipe tiket baru.
      */
     public function create()
     {
+        // Mengambil semua event, diurutkan berdasarkan judul
+        // Digunakan untuk pilihan event pada form
         $events = Event::orderBy('judul')->get();
-        return view('admin.ticket_type.create', compact('events'));
+
+        // Mengirim data event ke view form create
+        return view(
+            'admin.ticket_type.create', 
+            compact('events'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan data tipe tiket baru ke database.
      */
     public function store(Request $request)
     {
+        // Validasi data yang dikirim dari form
         $request->validate([
-            'event_id' => 'required|exists:events,id',
-            'name'     => 'required|string|max:100',
-            'price'    => 'required|numeric|min:0',
-            'quota'    => 'required|integer|min:1',
+            'event_id' => 'required|exists:events,id', // event harus ada di tabel events
+            'name'     => 'required|string|max:100', // nama tipe tiket
+            'price'    => 'required|numeric|min:0', // harga tiket
+            'quota'    => 'required|integer|min:1', // kuota tiket
         ]);
 
+        // Menyimpan data ke tabel ticket_types
+        // Pastikan model TicketType sudah memiliki $fillable
         TicketType::create($request->all());
 
-        return redirect()->route('admin.ticket-types.index')
+        // Redirect kembali ke halaman daftar tiket dengan pesan sukses
+        return redirect()
+            ->route('admin.ticket-types.index')
             ->with('success', 'Tipe tiket berhasil ditambahkan');
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan detail tipe tiket
      */
     public function show(TicketType $ticketType)
     {
-        return view('admin.ticket_type.show', compact('ticketType'));
+        // Mengirim data tiket ke halaman detail
+        return view(
+            'admin.ticket_type.show', 
+            compact('ticketType')
+        );
     }
 
 
     /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form edit tipe tiket.
      */
     public function edit(TicketType $ticketType)
     {
+        // Mengambil semua event untuk dropdown pilihan event
         $events = Event::orderBy('judul')->get();
 
-        return view('admin.ticket_type.edit', compact('ticketType', 'events'));
+        // Mengirim data tiket dan event ke view edit
+        return view(
+            'admin.ticket_type.edit', 
+            compact('ticketType', 'events')
+        );
     }
 
     /**
-     * Update the specified resource in storage.
+     * Memperbarui data tipe tiket di database.
      */
     public function update(Request $request, TicketType $ticketType)
     {
+        // Validasi data input
         $request->validate([
             'event_id' => 'required|exists:events,id',
             'name'     => 'required|string|max:255',
@@ -76,6 +102,7 @@ class TicketTypeController extends Controller
             'quota'    => 'required|integer|min:1',
         ]);
 
+        // Update data tipe tiket
         $ticketType->update([
             'event_id' => $request->event_id,
             'name'     => $request->name,
@@ -83,18 +110,23 @@ class TicketTypeController extends Controller
             'quota'    => $request->quota,
         ]);
 
-        return redirect()->route('admin.ticket-types.index')
+        // Redirect ke halaman index dengan pesan sukses
+        return redirect()
+            ->route('admin.ticket-types.index')
             ->with('success', 'Tipe tiket berhasil diperbarui');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus tipe tiket dari database.
      */
     public function destroy(TicketType $ticketType)
     {
+        // Menghapus data tipe tiket
         $ticketType->delete();
 
-        return redirect()->route('admin.ticket-types.index')
+        // Redirect ke halaman index dengan pesan sukses
+        return redirect()
+            ->route('admin.ticket-types.index')
             ->with('success', 'Tipe tiket berhasil dihapus');
     }
 }

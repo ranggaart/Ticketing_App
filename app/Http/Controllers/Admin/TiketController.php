@@ -9,7 +9,7 @@ use App\Models\Tiket;
 class TiketController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar tiket
      */
     public function index()
     {
@@ -17,7 +17,7 @@ class TiketController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form untuk menambah tiket baru
      */
     public function create()
     {
@@ -25,25 +25,29 @@ class TiketController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan data tiket baru ke database
      */
     public function store(Request $request)
     {
+         // Validasi data yang dikirim dari form
         $validatedData = request()->validate([
-            'event_id' => 'required|exists:events,id',
-            'tipe' => 'required|string|max:255',
-            'harga' => 'required|numeric|min:0',
-            'stok' => 'required|integer|min:0',
+            'event_id' => 'required|exists:events,id', // event_id wajib diisi dan harus ada di tabel events
+            'tipe' => 'required|string|max:255', // tipe tiket berupa teks dan maksimal 255 karakter
+            'harga' => 'required|numeric|min:0', // harga harus berupa angka dan minimal 0
+            'stok' => 'required|integer|min:0', // stok harus berupa angka bulat dan minimal 0
         ]);
 
-        // Create the ticket
+        // Menyimpan data tiket ke database
         Tiket::create($validatedData);
 
-        return redirect()->route('admin.events.show', $validatedData['event_id'])->with('success', 'Ticket berhasil ditambahkan.');
+        // Redirect kembali ke halaman detail event, sekaligus menampilkan pesan sukses
+        return redirect()
+            ->route('admin.events.show', $validatedData['event_id'])
+            ->with('success', 'Ticket berhasil ditambahkan.');
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan detail tiket 
      */
     public function show(string $id)
     {
@@ -51,7 +55,7 @@ class TiketController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form edit tiket
      */
     public function edit(string $id)
     {
@@ -59,32 +63,47 @@ class TiketController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Memperbarui data tiket yang sudah ada
      */
     public function update(Request $request, string $id)
     {
+        // Mengambil data tiket berdasarkan ID
+        // Jika tidak ditemukan, akan otomatis error 404
         $ticket = Tiket::findOrFail($id);
 
+        // Validasi data input dari form edit
         $validatedData = $request->validate([
             'tipe' => 'required|string|max:255',
             'harga' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
         ]);
 
+        // Mengupdate data tiket di database
         $ticket->update($validatedData);
 
-        return redirect()->route('admin.events.show', $ticket->event_id)->with('success', 'Ticket berhasil diperbarui.');
+        // Redirect kembali ke halaman detail event dengan pesan sukses
+        return redirect()
+            ->route('admin.events.show', $ticket->event_id)
+            ->with('success', 'Ticket berhasil diperbarui.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus data tiket
      */
     public function destroy(string $id)
     {
+        // Mengambil data tiket berdasarkan ID
         $ticket = Tiket::findOrFail($id);
+
+        // Menyimpan event_id sebelum tiket dihapus
         $eventId = $ticket->event_id;
+
+        // Menghapus tiket dari database
         $ticket->delete();
 
-        return redirect()->route('admin.events.show', $eventId)->with('success', 'Ticket berhasil dihapus.');
+        // Redirect kembali ke halaman detail event dengan pesan sukses
+        return redirect()
+            ->route('admin.events.show', $eventId)
+            ->with('success', 'Ticket berhasil dihapus.');
     }
 }

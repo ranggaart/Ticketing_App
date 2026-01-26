@@ -11,28 +11,39 @@ use App\Models\Kategori;
 class EventController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar semua event.
      */
     public function index()
-{
-	$events = Event::all();
-	return view('admin.event.index', compact('events'));
-}
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
     {
-        $categories = Kategori::all();
-        return view('admin.event.create', compact('categories'));
+        // Mengambil semua data event dari tabel events
+	    $events = Event::all();
+
+        // Mengirim data event ke view admin.event.index
+	    return view(
+            'admin.event.index', 
+            compact('events'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menampilkan form untuk menambahkan event baru.
+     */
+    public function create()
+    {
+        // Mengambil semua kategori untuk dropdown pilihan kategori
+        $categories = Kategori::all();
+
+        // Mengirim data kategori ke view admin.event.create
+        return view(
+            'admin.event.create', 
+            compact('categories'));
+    }
+
+    /**
+     * Menyimpan data event baru ke dalam database.
      */
     public function store(Request $request)
     {
+        // Validasi input dari form
         $validatedData = $request->validate([
             'judul' => 'required|string|max:255',
             'deskripsi' => 'required|string',
@@ -42,50 +53,74 @@ class EventController extends Controller
             'gambar' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        // Handle file upload
+        // Jika user mengunggah file gambar, simpan ke folder public/images/events
         if ($request->hasFile('gambar')) {
             $imageName = time().'.'.$request->gambar->extension();
             $request->gambar->move(public_path('images/events'), $imageName);
+
+            // Simpan nama file gambar ke dalam data yang akan disimpan
             $validatedData['gambar'] = $imageName;
         }
 
+        // Menyimpan ID user yang membuat event (jika login)
         $validatedData['user_id'] = auth()->user()->id ?? null;
 
+        // Menyimpan data event baru ke database
         Event::create($validatedData);
 
-        return redirect()->route('admin.events.index')->with('success', 'Event berhasil ditambahkan.');
+        // Redirect kembali ke halaman list event dengan pesan sukses
+        return redirect()
+            ->route('admin.events.index')
+            ->with('success', 'Event berhasil ditambahkan.');
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan detail event
      */
     public function show(string $id)
     {
+        // Mengambil data event berdasarkan ID
         $event = Event::findOrFail($id);
+
+        // Mengambil semua kategori untuk ditampilkan di detail event
         $categories = Kategori::all();
+
+        // Mengambil tiket terkait dengan event
         $tickets = $event->tikets;
 
-        return view('admin.event.show', compact('event', 'categories', 'tickets'));
+        // Mengirim data ke halaman detail event
+        return view(
+            'admin.event.show', 
+            compact('event', 'categories', 'tickets'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form edit event
      */
     public function edit(string $id)
     {
+        // Mengambil data event berdasarkan ID
         $event = Event::findOrFail($id);
+
+        // Mengambil semua kategori untuk dropdown
         $categories = Kategori::all();
-        return view('admin.event.edit', compact('event', 'categories'));
+
+        // // Menampilkan halaman edit event
+        return view(
+            'admin.event.edit', 
+            compact('event', 'categories'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Memperbarui data event
      */
     public function update(Request $request, string $id)
     {
         try {
+            // Mengambil event berdasarkan ID
             $event = Event::findOrFail($id);
 
+            // Validasi data input
             $validatedData = $request->validate([
                 'judul' => 'required|string|max:255',
                 'deskripsi' => 'required|string',
@@ -95,29 +130,46 @@ class EventController extends Controller
                 'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ]);
 
-            // Handle file upload
+            // Jika admin mengunggah file gambar baru
             if ($request->hasFile('gambar')) {
                 $imageName = time().'.'.$request->gambar->extension();
                 $request->gambar->move(public_path('images/events'), $imageName);
+
+                // Update nama file gambar di database
                 $validatedData['gambar'] = $imageName;
             }
 
+            // Update data event
             $event->update($validatedData);
 
-            return redirect()->route('admin.events.index')->with('success', 'Event berhasil diperbarui.');
+            // Redirect ke halaman list event dengan pesan sukses
+            return redirect()
+                ->route('admin.events.index')
+                ->with('success', 'Event berhasil diperbarui.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan saat memperbarui event: ' . $e->getMessage()]);
+             // Jika terjadi error, kembali ke halaman sebelumnya
+            return redirect()
+                ->back()
+                ->withErrors([
+                    'error' => 'Terjadi kesalahan saat memperbarui event: ' . $e->getMessage()
+                ]);
         }
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus event
      */
     public function destroy(string $id)
     {
+        // Mengambil event berdasarkan ID
         $event = Event::findOrFail($id);
+
+        // Menghapus data event
         $event->delete();
 
-        return redirect()->route('admin.events.index')->with('success', 'Event berhasil dihapus.');
+        // Redirect ke halaman list event dengan pesan sukses
+        return redirect()
+            ->route('admin.events.index')
+            ->with('success', 'Event berhasil dihapus.');
     }
 }

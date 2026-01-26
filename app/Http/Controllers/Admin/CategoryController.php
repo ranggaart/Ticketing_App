@@ -9,16 +9,19 @@ use App\Models\Kategori;
 class CategoryController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar semua kategori, dipakai di halaman index kategori (list data)
      */
     public function index()
     {
+        // Mengambil semua data kategori dari tabel kategori
         $categories = Kategori::all();
+
+        // Mengirim data kategori ke view admin.category.index
         return view('admin.category.index', compact('categories'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form untuk membuat kategori baru.
      */
     public function create()
     {
@@ -26,67 +29,94 @@ class CategoryController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan kategori baru ke dalam database.
      */
     public function store(Request $request)
     {
+        // Validasi input dari form
+        // Field 'nama' wajib diisi, harus berupa string, dan maksimal 255 karakter
         $payload = $request->validate([
             'nama' => 'required|string|max:255',
         ]);
 
+        // Pengecekan tambahan jika 'nama' tidak ada di payload
         if (!isset($payload['nama'])) {
-            return redirect()->route('categories.index')->with('error', 'Nama kategori wajib diisi.');
+            return redirect()
+                ->route('categories.index')
+                ->with('error', 'Nama kategori wajib diisi.');
         }
 
+        // Menyimpan data kategori baru ke database
         Kategori::create([
             'nama' => $payload['nama'],
         ]);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil ditambahkan.');
+        // Redirect kembali ke halaman index kategori dengan pesan sukses
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Kategori berhasil ditambahkan.');
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan detail satu kategori.
      */
     public function show(string $id)
     {
-        //
+        // Digunakan untuk menampilkan detail kategori
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form edit kategori.
      */
     public function edit(string $id)
     {
-        //
+        // Mengambil data berdasarkan ID lalu kirim ke view edit
     }
 
     /**
-     * Update the specified resource in storage.
+     * Memperbarui data kategori yang sudah ada
      */
     public function update(Request $request, string $id)
     {
+        // Validasi input dari form edit
         $payload = $request->validate([
             'nama' => 'required|string|max:255',
         ]);
 
+        // Pengecekan tambahan jika 'nama' tidak ada di payload
         if (!isset($payload['nama'])) {
-            return redirect()->route('categories.index')->with('error', 'Nama kategori wajib diisi.');
+            return redirect()
+                ->route('categories.index')
+                ->with('error', 'Nama kategori wajib diisi.');
         }
 
+        // Mencari kategori berdasarkan ID
+        // Jika tidak ditemukan, akan otomatis error 404
         $category = Kategori::findOrFail($id);
+
+        // Mengubah nama kategori
         $category->nama = $payload['nama'];
+ 
+        // Menyimpan perubahan ke database
         $category->save();
 
-        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil diperbarui.');
+        // Redirect kembali ke halaman index kategori dengan pesan sukses
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Kategori berhasil diperbarui.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus kategori berdasarkan ID.
      */
     public function destroy(string $id)
     {
+        // Menghapus data kategori langsung berdasarkan ID 
         Kategori::destroy($id);
-        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil dihapus.');
+
+        // Redirect kembali ke halaman index kategori dengan pesan sukses
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Kategori berhasil dihapus.');
     }
 }

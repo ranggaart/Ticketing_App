@@ -5,19 +5,27 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\Order;
-use App\Models\Tiket;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     /**
-     * Display the dashboard.
+     * Menampilkan halaman dashboard admin dengan statistik utama
      */
     public function index()
     {
+        //  Menghitung total event yang ada di database
         $totalEvents = Event::count();
+
+        // Menghitung total kategori yang ada di database
         $totalCategories = \App\Models\Kategori::count();
+
+        // Menghitung total pesanan/order yang ada di database
         $totalOrders = Order::count();
-        return view('admin.dashboard', compact('totalEvents', 'totalCategories', 'totalOrders'));
+
+        // Mengirim data statistik ke view admin.dashboard
+        return view(
+            'admin.dashboard', 
+            compact('totalEvents', 'totalCategories', 'totalOrders')
+            );
     }
 }
