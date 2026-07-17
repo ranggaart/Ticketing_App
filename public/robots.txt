@@ -1,2 +1,920 @@
 User-agent: *
 Disallow:
+
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('lokasis', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('nama_lokasi');
+
+            $table->char('aktif',1)->default('Y');
+
+            $table->timestamps();
+
+            $table->softDeletes();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('lokasis');
+
+    }
+};
+
+
+models/lokasi.php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Lokasi extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'nama_lokasi',
+        'aktif'
+    ];
+
+    public function events()
+    {
+        return $this->hasMany(Event::class);
+    }
+}
+
+LokasiSeeder.php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\Lokasi;
+
+class LokasiSeeder extends Seeder
+{
+    public function run(): void
+    {
+        Lokasi::insert([
+            [
+                'id' => 1,
+                'nama_lokasi' => 'Stadion Utama',
+                'aktif' => 'Y',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 2,
+                'nama_lokasi' => 'Galeri Seni Kota',
+                'aktif' => 'Y',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 3,
+                'nama_lokasi' => 'Taman Kota',
+                'aktif' => 'Y',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+    }
+}
+
+DatabasesSeeder.php
+LokasiSeeder::class,
+
+php artisan migrate --seed
+
+php artisan make:migration add_lokasi_id_to_events_table --table=events
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('events', function (Blueprint $table) {
+
+            $table->foreignId('lokasi_id')
+                ->nullable()
+                ->after('kategori_id')
+                ->constrained('lokasis')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
+
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('events', function (Blueprint $table) {
+
+            $table->dropForeign(['lokasi_id']);
+            $table->dropColumn('lokasi_id');
+
+        });
+    }
+};
+
+
+php artisan migrate
+
+app/Models/Event.php
+protected $fillable = [
+    'user_id',
+    'judul',
+    'deskripsi',
+    'tanggal_waktu',
+    'lokasi',
+    'lokasi_id',
+    'kategori_id',
+    'gambar',
+];
+
+masih di event.php
+Misalnya diletakkan setelah relasi kategori.
+public function lokasi()
+{
+    return $this->belongsTo(Lokasi::class);
+}
+
+models/lokasi.php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Lokasi extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'nama_lokasi',
+        'aktif',
+    ];
+
+    public function events()
+    {
+        return $this->hasMany(Event::class);
+    }
+}
+
+php artisan make:seeder UpdateEventLokasiSeeder
+use App\Models\Event;
+
+public function run(): void
+{
+    Event::query()->update([
+        'lokasi_id' => 1
+    ]);
+}
+
+php artisan db:seed --class=UpdateEventLokasiSeeder
+
+php artisan tinker
+$event = App\Models\Event::first();
+$event->lokasi;
+
+harus muncul
+App\Models\Lokasi {
+    id: 1,
+    nama_lokasi: "Stadion Utama",
+    aktif: "Y"
+}
+
+php artisan make:model Lokasi
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Lokasi extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'nama',
+        'alamat',
+    ];
+
+    /**
+     * Satu lokasi memiliki banyak event.
+     */
+    public function events()
+    {
+        return $this->hasMany(Event::class);
+    }
+}
+
+midel/event
+public function kategori()
+{
+    return $this->belongsTo(Kategori::class);
+}
+
+/**
+ * Lokasi tempat event diselenggarakan.
+ */
+public function lokasiEvent()
+{
+    return $this->belongsTo(Lokasi::class, 'lokasi_id');
+}
+
+app/Http/Controllers/Admin/EventController.php
+use App\Models\Lokasi;
+
+masih di eventcontroller
+public function create()
+{
+    $categories = Kategori::all();
+    $lokasis = Lokasi::where('aktif', true)->get();
+
+    return view(
+        'admin.event.create',
+        compact('categories', 'lokasis')
+    );
+}
+
+public function edit(string $id)
+{
+    $event = Event::findOrFail($id);
+
+    $categories = Kategori::all();
+    $lokasis = Lokasi::where('aktif', true)->get();
+
+    return view(
+        'admin.event.edit',
+        compact('event', 'categories', 'lokasis')
+    );
+}
+
+Pada method store()
+'lokasi_id' => 'required|exists:lokasis,id',
+
+// Menyimpan data event baru ke database
+$lokasi = Lokasi::findOrFail($validatedData['lokasi_id']);
+
+$validatedData['lokasi'] = $lokasi->nama;
+
+Event::create($validatedData);
+
+Pada method update()
+'lokasi_id' => 'required|exists:lokasis,id',
+
+tambahkan sebelum validateddata
+$lokasi = Lokasi::findOrFail($validatedData['lokasi_id']);
+
+$validatedData['lokasi'] = $lokasi->nama;
+
+resources/views/admin/event/create.blade.php
+<div class="form-control">
+    <label class="label">
+        <span class="label-text">Lokasi</span>
+    </label>
+
+    <select
+        name="lokasi_id"
+        class="select select-bordered"
+        required>
+
+        <option value="">-- Pilih Lokasi --</option>
+
+        @foreach($lokasis as $lokasi)
+            <option
+                value="{{ $lokasi->id }}"
+                {{ old('lokasi_id') == $lokasi->id ? 'selected' : '' }}>
+                {{ $lokasi->nama }}
+            </option>
+        @endforeach
+
+    </select>
+</div>
+
+resources/views/admin/event/edit.blade.php
+<div class="form-control">
+    <label class="label">
+        <span class="label-text">Lokasi</span>
+    </label>
+
+    <select
+        name="lokasi_id"
+        class="select select-bordered"
+        required>
+
+        @foreach($lokasis as $lokasi)
+            <option
+                value="{{ $lokasi->id }}"
+                {{ $event->lokasi_id == $lokasi->id ? 'selected' : '' }}>
+                {{ $lokasi->nama }}
+            </option>
+        @endforeach
+
+    </select>
+</div>
+
+
+php artisan make:controller Admin/LokasiController --resource
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Lokasi;
+
+class LokasiController extends Controller
+{
+    /**
+     * Menampilkan daftar semua lokasi.
+     */
+    public function index()
+    {
+        // Mengambil seluruh data lokasi
+        $lokasis = Lokasi::all();
+
+        // Menampilkan halaman daftar lokasi
+        return view(
+            'admin.lokasi.index',
+            compact('lokasis')
+        );
+    }
+
+    /**
+     * Menampilkan form tambah lokasi.
+     */
+    public function create()
+    {
+        return view('admin.lokasi.create');
+    }
+
+    /**
+     * Menyimpan lokasi baru.
+     */
+    public function store(Request $request)
+    {
+        // Validasi input
+        $validatedData = $request->validate([
+            'nama'   => 'required|string|max:255',
+            'alamat' => 'required|string',
+        ]);
+
+        // Simpan ke database
+        Lokasi::create($validatedData);
+
+        // Kembali ke halaman index
+        return redirect()
+            ->route('admin.lokasis.index')
+            ->with('success', 'Lokasi berhasil ditambahkan.');
+    }
+
+    /**
+     * Menampilkan detail lokasi.
+     */
+    public function show(string $id)
+    {
+        // Ambil data lokasi
+        $lokasi = Lokasi::findOrFail($id);
+
+        return view(
+            'admin.lokasi.show',
+            compact('lokasi')
+        );
+    }
+
+    /**
+     * Menampilkan form edit lokasi.
+     */
+    public function edit(string $id)
+    {
+        // Ambil data lokasi
+        $lokasi = Lokasi::findOrFail($id);
+
+        return view(
+            'admin.lokasi.edit',
+            compact('lokasi')
+        );
+    }
+
+    /**
+     * Memperbarui data lokasi.
+     */
+    public function update(Request $request, string $id)
+    {
+        try {
+
+            // Ambil lokasi
+            $lokasi = Lokasi::findOrFail($id);
+
+            // Validasi
+            $validatedData = $request->validate([
+                'nama'   => 'required|string|max:255',
+                'alamat' => 'required|string',
+            ]);
+
+            // Update data
+            $lokasi->update($validatedData);
+
+            return redirect()
+                ->route('admin.lokasis.index')
+                ->with('success', 'Lokasi berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+
+            return redirect()
+                ->back()
+                ->withErrors([
+                    'error' => 'Terjadi kesalahan saat memperbarui lokasi: ' . $e->getMessage()
+                ]);
+        }
+    }
+
+    /**
+     * Menghapus lokasi.
+     */
+    public function destroy(string $id)
+    {
+        // Ambil lokasi
+        $lokasi = Lokasi::findOrFail($id);
+
+        // Cek apakah masih digunakan oleh event
+        if ($lokasi->events()->count() > 0) {
+
+            return redirect()
+                ->route('admin.lokasis.index')
+                ->with(
+                    'error',
+                    'Lokasi tidak dapat dihapus karena masih digunakan oleh event.'
+                );
+        }
+
+        // Hapus lokasi
+        $lokasi->delete();
+        return redirect()
+            ->route('admin.lokasis.index')
+            ->with('success', 'Lokasi berhasil dihapus.');
+    }
+}
+
+routes/web.php
+Di dalam group admin tambahkan
+Route::resource('lokasis', LokasiController::class);
+use App\Http\Controllers\Admin\LokasiController;
+
+resources/views/components/admin/sidebar.blade.php
+<li>
+    <a href="{{ route('admin.lokasis.index') }}">
+        Manajemen Lokasi
+    </a>
+</li>
+
+buat resources/views/admin/lokasi
+index
+<x-layouts.admin title="Manajemen Lokasi">
+
+    @if(session('success'))
+        <div class="toast toast-bottom toast-center">
+            <div class="alert alert-success">
+                <span>{{ session('success') }}</span>
+            </div>
+        </div>
+
+        <script>
+            setTimeout(() => {
+                document.querySelector('.toast')?.remove();
+            },3000);
+        </script>
+    @endif
+
+    @if(session('error'))
+        <div class="toast toast-bottom toast-center">
+            <div class="alert alert-error">
+                <span>{{ session('error') }}</span>
+            </div>
+        </div>
+
+        <script>
+            setTimeout(() => {
+                document.querySelector('.toast')?.remove();
+            },3000);
+        </script>
+    @endif
+
+    <div class="container mx-auto p-10">
+
+        <div class="flex items-center mb-6">
+
+            <h1 class="text-3xl font-semibold">
+                Manajemen Lokasi
+            </h1>
+
+            <a
+                href="{{ route('admin.lokasis.create') }}"
+                class="btn btn-primary ml-auto">
+
+                Tambah Lokasi
+
+            </a>
+
+        </div>
+
+        <div class="overflow-x-auto rounded-box bg-white shadow-xs p-5">
+
+            <table class="table">
+
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Lokasi</th>
+                        <th>Alamat</th>
+                        <th>Jumlah Event</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                @forelse($lokasis as $index=>$lokasi)
+
+                    <tr>
+
+                        <td>{{ $index+1 }}</td>
+
+                        <td>{{ $lokasi->nama }}</td>
+
+                        <td>{{ $lokasi->alamat }}</td>
+
+                        <td>
+
+                            {{ $lokasi->events()->count() }}
+
+                        </td>
+
+                        <td>
+
+                            <a
+                                href="{{ route('admin.lokasis.show',$lokasi->id) }}"
+                                class="btn btn-info btn-sm">
+
+                                Detail
+
+                            </a>
+
+                            <a
+                                href="{{ route('admin.lokasis.edit',$lokasi->id) }}"
+                                class="btn btn-primary btn-sm">
+
+                                Edit
+
+                            </a>
+
+                            <button
+                                onclick="openDeleteModal(this)"
+                                data-id="{{ $lokasi->id }}"
+                                class="btn btn-error btn-sm">
+
+                                Hapus
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                @empty
+
+                    <tr>
+
+                        <td colspan="5" class="text-center">
+
+                            Tidak ada lokasi.
+
+                        </td>
+
+                    </tr>
+
+                @endforelse
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <dialog id="delete_modal" class="modal">
+
+        <form method="POST" class="modal-box">
+
+            @csrf
+            @method('DELETE')
+
+            <h3 class="font-bold text-lg">
+
+                Hapus Lokasi
+
+            </h3>
+
+            <p>
+
+                Apakah Anda yakin?
+
+            </p>
+
+            <div class="modal-action">
+
+                <button class="btn btn-error">
+
+                    Hapus
+
+                </button>
+
+                <button
+                    type="button"
+                    onclick="delete_modal.close()"
+                    class="btn">
+
+                    Batal
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+<script>
+
+function openDeleteModal(button){
+
+    let id = button.dataset.id;
+
+    let form = document.querySelector("#delete_modal form");
+
+    form.action="/admin/lokasis/"+id;
+
+    delete_modal.showModal();
+
+}
+
+</script>
+
+</x-layouts.admin>
+
+create
+<x-layouts.admin title="Tambah Lokasi">
+
+<div class="container mx-auto p-10">
+
+<div class="card bg-white shadow">
+
+<div class="card-body">
+
+<h2 class="card-title">
+
+Tambah Lokasi
+
+</h2>
+
+<form
+action="{{ route('admin.lokasis.store') }}"
+method="POST">
+
+@csrf
+
+<div class="mb-4">
+
+<label class="label">
+
+Nama Lokasi
+
+</label>
+
+<input
+type="text"
+name="nama"
+class="input input-bordered w-full"
+value="{{ old('nama') }}">
+
+</div>
+
+<div class="mb-4">
+
+<label class="label">
+
+Alamat
+
+</label>
+
+<textarea
+name="alamat"
+class="textarea textarea-bordered w-full">{{ old('alamat') }}</textarea>
+
+</div>
+
+<div class="flex gap-2">
+
+<button class="btn btn-primary">
+
+Simpan
+
+</button>
+
+<a
+href="{{ route('admin.lokasis.index') }}"
+class="btn">
+
+Batal
+
+</a>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+</x-layouts.admin>
+
+edit
+<x-layouts.admin title="Edit Lokasi">
+
+<div class="container mx-auto p-10">
+
+<div class="card bg-white shadow">
+
+<div class="card-body">
+
+<h2 class="card-title">
+
+Edit Lokasi
+
+</h2>
+
+<form
+action="{{ route('admin.lokasis.update',$lokasi->id) }}"
+method="POST">
+
+@csrf
+@method('PUT')
+
+<div class="mb-4">
+
+<label class="label">
+
+Nama Lokasi
+
+</label>
+
+<input
+type="text"
+name="nama"
+class="input input-bordered w-full"
+value="{{ old('nama',$lokasi->nama) }}">
+
+</div>
+
+<div class="mb-4">
+
+<label class="label">
+
+Alamat
+
+</label>
+
+<textarea
+name="alamat"
+class="textarea textarea-bordered w-full">{{ old('alamat',$lokasi->alamat) }}</textarea>
+
+</div>
+
+<div class="flex gap-2">
+
+<button class="btn btn-primary">
+
+Update
+
+</button>
+
+<a
+href="{{ route('admin.lokasis.index') }}"
+class="btn">
+
+Batal
+
+</a>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+</x-layouts.admin>
+
+show
+<x-layouts.admin title="Detail Lokasi">
+
+<div class="container mx-auto p-10">
+
+<div class="card bg-white shadow">
+
+<div class="card-body">
+
+<h2 class="card-title">
+
+Detail Lokasi
+
+</h2>
+
+<div class="space-y-4">
+
+<div>
+
+<strong>Nama Lokasi</strong>
+
+<p>
+
+{{ $lokasi->nama }}
+
+</p>
+
+</div>
+
+<div>
+
+<strong>Alamat</strong>
+
+<p>
+
+{{ $lokasi->alamat }}
+
+</p>
+
+</div>
+
+<div>
+
+<strong>Jumlah Event</strong>
+
+<p>
+
+{{ $lokasi->events()->count() }}
+
+</p>
+
+</div>
+
+</div>
+
+<div class="mt-6">
+
+<a
+href="{{ route('admin.lokasis.index') }}"
+class="btn">
+
+Kembali
+
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</x-layouts.admin>
+
